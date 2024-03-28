@@ -135,7 +135,7 @@ class FastOBQ:
         d_row, d_col, block_size, device, dtype = self.d_row, self.d_col, self.block_size, self.W_device, self.W_dtype
         # get quantization group size
         group_size = self.group_size or d_col
-        num_groups = d_col // self.group_size
+        num_groups = d_col // group_size
 
         qweight = torch.empty(d_row, d_col, device=device, dtype=torch.uint8)
         scale = torch.empty(d_row, num_groups, device=device, dtype=dtype)
@@ -171,7 +171,7 @@ class FastOBQ:
                     w_ci = w_blk[:, i]
                     d = H_inv_cho_blk[i, i]
 
-                    if self.group_size > 0 and (c1 + i) % self.group_size == 0:
+                    if self.group_size and (c1 + i) % self.group_size == 0:
                         self.quantizer.find_params(w[:, (c1 + i):(c1 + i + self.group_size)], weight=True)
                         scale[:, (c1 + i) // group_size] = self.quantizer.scale.flatten()
                         zero[:, (c1 + i) // group_size] = self.quantizer.zero.flatten()
